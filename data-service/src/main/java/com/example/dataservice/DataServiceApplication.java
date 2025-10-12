@@ -1,4 +1,4 @@
-package com.example.data_service;
+package com.example.dataservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
