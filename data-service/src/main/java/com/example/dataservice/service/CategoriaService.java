@@ -22,12 +22,22 @@ public class CategoriaService {
     private final CategoriaMapper categoriaMapper;
     private final ProductoRepository productoRepository;
 
+    /**
+     * Constructor para la inyección de dependencias.
+     * @param categoriaRepository Repositorio JPA para la entidad Categoria.
+     * @param categoriaMapper Mapper para convertir entre entidades y DTOs.
+     * @param productoRepository Repositorio JPA para verificar la existencia de productos asociados.
+     */
     public CategoriaService(CategoriaRepository categoriaRepository, CategoriaMapper categoriaMapper, ProductoRepository productoRepository) {
         this.categoriaRepository = categoriaRepository;
         this.categoriaMapper = categoriaMapper;
         this.productoRepository = productoRepository;
     }
 
+    /**
+     * Obtiene todas las categorias almacenadas en la base de datos
+     * @return lista de todos los registros de categoria y los convierte a DTO
+     */
     public List<CategoriaDTO> obtenerTodas() {
         return categoriaRepository.findAll()
                 .stream()
@@ -35,12 +45,25 @@ public class CategoriaService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Busca una categoría por su identificador único.
+     * @param id Identificador de la categoría buscada.
+     * @return Categoría encontrada convertida a DTO.
+     * @throws CategoriaNoEncontradaException si la categoría no existe.
+     */
     public CategoriaDTO buscarPorId(Long id) {
         return categoriaRepository.findById(id)
                 .map(categoriaMapper::toDTO)
                 .orElseThrow(() -> new CategoriaNoEncontradaException("Categoría no encontrada con ID: " + id));
     }
 
+    /**
+     * Crea una categoría nueva.
+     * Realiza una validación de negocio para asegurar que el nombre no exista previamente.
+     * @param request DTO que contiene los datos para la nueva categoría (nombre y descripción).
+     * @return Categoría creada y guardada, convertida a DTO.
+     * @throws ValidacionNegocioException si ya existe una categoría con el mismo nombre.
+     */
     public CategoriaDTO crearCategoria(CategoriaRequest request) {
         if (categoriaRepository.findByNombre(request.getNombre()).isPresent()) {
             throw new ValidacionNegocioException("Ya existe una categoría con el nombre: " + request.getNombre());
@@ -56,6 +79,12 @@ public class CategoriaService {
 
     /**
      * Actualiza una categoría existente identificada por su ID.
+     * Realiza validaciones de existencia (por ID) y unicidad (por nombre) antes de actualizar.
+     * @param id Identificador de la categoría a actualizar.
+     * @param request DTO con los nuevos datos (nombre y descripción).
+     * @return Categoría actualizada, convertida a DTO.
+     * @throws CategoriaNoEncontradaException si la categoría ID no existe.
+     * @throws ValidacionNegocioException si el nuevo nombre ya está en uso por otra categoría.
      */
     public CategoriaDTO actualizarCategoria(Long id, CategoriaRequest request) {
         Categoria categoria = categoriaRepository.findById(id)
@@ -74,8 +103,11 @@ public class CategoriaService {
     }
 
     /**
-     * Elimina una categoría por ID.
-     * Verifica que la categoría no tenga productos asociados antes de borrar.
+     * Elimina una categoría por su identificador único.
+     * Implementa una restricción de integridad de negocio.
+     * @param id Identificador de la categoría a eliminar.
+     * @throws CategoriaNoEncontradaException si la categoría ID no existe.
+     * @throws ValidacionNegocioException si existen productos asociados a la categoría (restricción de FK).
      */
     public void borrarCategoria(Long id) {
         Categoria categoria = categoriaRepository.findById(id)

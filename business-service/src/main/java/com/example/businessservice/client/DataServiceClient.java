@@ -53,13 +53,13 @@ public interface DataServiceClient {
     @GetMapping("/data/categorias/{nombre}/estadisticas")
     Map<String, Object> obtenerEstadisticasCategoria(@PathVariable("nombre") String nombre);
 
-    @GetMapping("/data/inventario")
+    @GetMapping("/data/inventario/stock-bajo")
     List<InventarioDTO> obtenerProductosConStockBajo();
 
     @GetMapping("/data/inventario/producto/{productoId}")
     InventarioDTO obtenerInventarioPorProductoId(@PathVariable("productoId") Long productoId);
 
-    @PutMapping("/data/inventario/{productoId}")
+    @PutMapping("/data/inventario/{productoId}/stock")
     InventarioDTO actualizarCantidadInventario(@PathVariable("productoId") Long productoId,
                                                @RequestBody InventarioDTO payload);
 
