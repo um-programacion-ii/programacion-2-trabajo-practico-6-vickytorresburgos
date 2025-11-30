@@ -1,5 +1,6 @@
 package com.example.dataservice.controller;
 
+import com.example.dataservice.dto.InventarioDTO;
 import com.example.dataservice.dto.ProductoDTO;
 import com.example.dataservice.dto.ProductoRequest;
 import com.example.dataservice.entity.Inventario;
@@ -106,7 +107,7 @@ public class DataController {
      * @return Lista de DTO de inventario con stock bajo
      */
     @GetMapping("/inventario/stock-bajo")
-    public List<Inventario> obtenerProductosConStockBajo() {
+    public List<InventarioDTO> obtenerProductosConStockBajo() {
         return inventarioService.obtenerProductosConStockBajo();
     }
 
@@ -115,7 +116,18 @@ public class DataController {
      * @return Lista completa de Inventario DTO
      */
     @GetMapping("/inventario")
-    public List<Inventario> obtenerTodoElInventario() {
+    public List<InventarioDTO> obtenerTodoElInventario() {
         return inventarioService.obtenerTodo();
+    }
+
+    /**
+     * Actualiza la cantidad de stock de un producto y retorna el DTO actualizado.
+     * @param id identificador del producto a actualizar
+     * @param nuevoStock nueva cantidad de stock del producto
+     * @return DTO de Inventario actualizado
+     */
+    @PutMapping("/inventario/{id}/stock")
+    public InventarioDTO actualizarStock(@PathVariable Long id, @RequestBody Integer nuevoStock) {
+        return inventarioService.actualizarStock(id, nuevoStock);
     }
 }

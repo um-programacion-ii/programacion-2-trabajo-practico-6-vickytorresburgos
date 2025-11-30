@@ -25,6 +25,12 @@ public class ProductoService {
     private final ProductoMapper productoMapper;
     private final CategoriaRepository categoriaRepository;
 
+    /**
+     * Constructor para la inyección de dependencias.
+     * @param productoRepository Repositorio JPA para la entidad Producto.
+     * @param productoMapper Mapper para convertir entre entidades y DTOs.
+     * @param categoriaRepository Repositorio JPA para buscar la categoría asociada.
+     */
     public ProductoService(ProductoRepository productoRepository,
                            ProductoMapper productoMapper, CategoriaRepository categoriaRepository) {
         this.productoRepository = productoRepository;
@@ -32,6 +38,10 @@ public class ProductoService {
         this.categoriaRepository = categoriaRepository;
     }
 
+    /**
+     * Obtiene todos los productos almacenados en la base de datos.
+     * @return Lista de todos los productos convertidos a DTOs.
+     */
     public List<ProductoDTO> obtenerTodos() {
         return productoRepository.findAll()
                 .stream()
@@ -39,12 +49,23 @@ public class ProductoService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Busca un producto por su identificador único.
+     * @param id Identificador del producto buscado.
+     * @return Producto encontrado convertido a DTO.
+     * @throws ProductoNoEncontradoException si el producto no existe.
+     */
     public ProductoDTO buscarPorId(Long id) {
         return productoRepository.findById(id)
                 .map(productoMapper::toDTO)
                 .orElseThrow(() -> new ProductoNoEncontradoException("Producto no encontrado con ID: " + id));
     }
 
+    /**
+     * Busca productos asociados a una categoría específica por su nombre.
+     * @param nombreCategoria Nombre de la categoría a buscar.
+     * @return Lista de productos que pertenecen a la categoría, convertidos a DTOs.
+     */
     public List<ProductoDTO> buscarPorCategoria(String nombreCategoria) {
         return productoRepository.findByCategoriaNombre(nombreCategoria)
                 .stream()
@@ -52,6 +73,13 @@ public class ProductoService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Crea un nuevo producto junto con su registro de inventario asociado.
+     * @param request DTO que contiene los datos del producto y el stock inicial.
+     * @return Producto creado y guardado, convertido a DTO.
+     * @throws ValidacionNegocioException si el stock es negativo.
+     * @throws CategoriaNoEncontradaException si la categoría especificada no existe.
+     */
     public ProductoDTO crearProducto(ProductoRequest request) {
         if (request.getStock() < 0) {
             throw new ValidacionNegocioException("El stock no puede ser negativo");
@@ -78,6 +106,15 @@ public class ProductoService {
         return productoMapper.toDTO(productoGuardado);
     }
 
+    /**
+     * Actualiza un producto existente identificado por su ID.
+     * @param id Identificador del producto a actualizar.
+     * @param request DTO con los nuevos datos.
+     * @return Producto actualizado, convertido a DTO.
+     * @throws ProductoNoEncontradoException si el producto ID no existe.
+     * @throws ValidacionNegocioException si el nuevo stock es negativo.
+     * @throws CategoriaNoEncontradaException si la nueva categoría no existe.
+     */
     public ProductoDTO actualizarProducto(Long id, ProductoRequest request) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ProductoNoEncontradoException("Producto no encontrado con ID: " + id));
@@ -103,6 +140,11 @@ public class ProductoService {
         return productoMapper.toDTO(productoActualizado);
     }
 
+    /**
+     * Elimina un producto por su identificador único.
+     * @param id Identificador del producto a eliminar.
+     * @throws ProductoNoEncontradoException si el producto no existe.
+     */
     public void eliminarProducto(Long id) {
         if (!productoRepository.existsById(id)) {
             throw new ProductoNoEncontradoException("Producto no encontrado con ID: " + id);

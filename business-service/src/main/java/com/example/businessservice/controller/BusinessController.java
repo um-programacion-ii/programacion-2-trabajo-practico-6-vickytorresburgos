@@ -107,7 +107,7 @@ public class BusinessController {
         return ResponseEntity.ok(stats);
     }
 
-    @GetMapping("/reportes")
+    @GetMapping("/reportes/stock-bajo")
     public ResponseEntity<List<InventarioDTO>> obtenerProductosConStockBajo() {
         return ResponseEntity.ok(inventarioBusinessService.obtenerProductosConStockBajo());
     }
