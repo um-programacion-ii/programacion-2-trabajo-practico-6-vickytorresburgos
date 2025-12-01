@@ -1221,7 +1221,7 @@ El sistema consta de dos microservicios principales desacoplados:
 
 ### 1. Clonar el repositorio
 ```
-git clone <URL_DEL_REPO>
+git clone git@github.com:um-programacion-ii/programacion-2-trabajo-practico-6-vickytorresburgos.git
 cd microservices-system
 ```
 
