@@ -1190,3 +1190,128 @@ Cada archivo debe seguir este formato:
 ## 📝 Licencia
 
 Este trabajo es parte del curso de Programación II de Ingeniería en Informática. Uso educativo únicamente.
+
+---
+# Sistema de Microservicios: Gestión de Productos
+
+
+Sistema distribuido diseñado bajo arquitectura de microservicios para la gestión de productos, categorías e inventario. 
+- Implementa patrones de comunicación sincrónica mediante **OpenFeign**
+- Persistencia en múltiples bases de datos (H2/MySQL/PostgreSQL) 
+- Testing
+
+## Arquitectura del Sistema
+
+El sistema consta de dos microservicios principales desacoplados:
+
+1.  **Business Service (Puerto 8080):**
+    * Actúa como **API Gateway** y orquestador.
+    * Contiene la lógica de negocio, validaciones y cálculos (ej. estadísticas).
+    * Se comunica con el servicio de datos vía **Feign Client**.
+    * No tiene base de datos propia.
+
+2.  **Data Service (Puerto 8081):**
+    * Microservicio de persistencia puro.
+    * Gestiona el acceso a datos (CRUD) sobre MySQL/PostgreSQL/H2.
+    * Expone endpoints REST para consumo interno.
+
+
+
+## Instalación y Ejecución
+
+### 1. Clonar el repositorio
+```
+git clone <URL_DEL_REPO>
+cd microservices-system
+```
+
+
+### 2\. Levantar Infraestructura (Base de Datos)
+
+Utilizamos Docker Compose para instanciar las bases de datos de producción/desarrollo.
+
+```
+docker-compose up -d
+```
+
+
+### 3\. Ejecutar Microservicios en terminales separadas
+
+**Data Service (Profile: mysql):**
+
+```
+cd data-service
+./mvnw spring-boot:run -Dspring-boot.run.profiles=mysql
+```
+
+**Business Service:**
+
+```
+cd business-service
+./mvnw spring-boot:run
+```
+
+## Testing
+
+### Ejecutar todos los tests
+
+Desde la raíz de cada microservicio:
+
+```
+./mvnw test
+```
+
+### Desglose de Pruebas
+
+#### A. Data Service (`data-service`)
+
+* **Test Unitarios:** Validaciones de lógica interna y DTOs.
+* **Tests de Integración (`@SpringBootTest`):**
+    * Utiliza **Testcontainers** (o conexión a Docker local) para levantar una base de datos MySQL real efímera.
+    * Valida Constraints (Unique, Not Null) y transacciones JPA reales.
+    * *Comando:* `./mvnw test -Dtest=DataServiceIntegrationTest`
+
+#### B. Business Service (`business-service`)
+
+* **Test Unitarios:** Mocks de servicios y lógica de cálculo.
+* **Tests de Controladores (`@WebMvcTest`):** Validación de inputs HTTP, JSON y Códigos de estado.
+* **Tests de Integración (`@SpringBootTest` + WireMock):**
+    * Utiliza **WireMock** para simular el `data-service`.
+    * Prueba la resiliencia (Circuit Breakers, manejo de 404/500).
+    * Valida la serialización de Feign Client sin requerir el otro servicio encendido.
+    * *Comando:* `./mvnw test -Dtest=BusinessServiceIntegrationTest`
+
+## Documentación de API 
+
+El punto de entrada para los clientes es el **Business Service (Puerto 8080)**.
+
+### Productos
+
+| Método | Endpoint | Descripción |
+| :--- | :--- | :--- |
+| `GET` | `/api/productos` | Listar todos los productos. |
+| `POST` | `/api/productos` | Crear producto (valida precio y stock). |
+| `GET` | `/api/productos/{id}` | Obtener detalle. |
+| `GET` | `/api/productos/filtros?minPrice=X&maxPrice=Y` | Filtrar por rango de precios. |
+
+### Categorías
+
+| Método | Endpoint | Descripción |
+| :--- | :--- | :--- |
+| `GET` | `/api/categorias` | Listar categorías. |
+| `POST` | `/api/categorias` | Crear categoría (valida unicidad). |
+| `GET` | `/api/categorias/{nombre}/estadisticas` | **Reporte:** Total stock, valor inventario, etc. |
+
+### Inventario
+
+| Método | Endpoint | Descripción |
+| :--- | :--- | :--- |
+| `GET` | `/api/reportes/stock-bajo` | Alerta de productos con stock crítico. |
+| `POST` | `/api/reportes/movimientos` | Registrar entrada/salida de stock. |
+
+
+-----
+
+**Autor:** Maria Victoria Torres Burgos \
+**Legajo:** 62092 \
+**Materia:** Programación II - Trabajo Práctico Microservicios

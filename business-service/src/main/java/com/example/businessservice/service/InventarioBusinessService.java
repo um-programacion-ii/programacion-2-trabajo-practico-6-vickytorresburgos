@@ -12,17 +12,29 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Servicio de negocio para la gestión de Inventario.
+ * Maneja las operaciones de consulta de stock, actualizaciones manuales y
+ * registro de movimientos, validando las reglas de negocio antes de llamar al servicio de datos.
+ */
 @Service
 @Slf4j
 public class InventarioBusinessService {
     private final DataServiceClient dataServiceClient;
 
+    /**
+     * Inyección de dependencias.
+     * @param dataServiceClient Cliente Feign para comunicación con data-service.
+     */
     public InventarioBusinessService(DataServiceClient dataServiceClient) {
         this.dataServiceClient = dataServiceClient;
     }
 
     /**
-     * Obtiene productos con stock bajo (delegado al data-service).
+     * Obtiene la lista de productos que están por debajo del umbral de stock mínimo.
+     *
+     * @return Lista de {@link InventarioDTO} con stock crítico.
+     * @throws MicroserviceCommunicationException Si falla la comunicación.
      */
     public List<InventarioDTO> obtenerProductosConStockBajo() {
         try {
@@ -35,7 +47,13 @@ public class InventarioBusinessService {
     }
 
     /**
-     * Obtiene el registro de inventario para un producto por su id.
+     * Obtiene el registro de inventario asociado a un producto específico.
+     *
+     * @param productoId Identificador del producto.
+     * @return El {@link InventarioDTO} asociado.
+     * @throws ValidacionNegocioException Si el ID es nulo.
+     * @throws InventarioNoEncontradoException Si no existe inventario para ese producto.
+     * @throws MicroserviceCommunicationException Error técnico.
      */
     public InventarioDTO obtenerInventarioPorProductoId(Long productoId) {
         if (productoId == null) throw new ValidacionNegocioException("El id del producto es obligatorio");
@@ -50,7 +68,13 @@ public class InventarioBusinessService {
     }
 
     /**
-     * Actualiza la cantidad de inventario de un producto.
+     * Actualiza manualmente la cantidad de stock disponible para un producto.
+     *
+     * @param productoId Identificador del producto.
+     * @param nuevaCantidad Nueva cantidad absoluta de stock (debe ser >= 0).
+     * @return El inventario actualizado.
+     * @throws ValidacionNegocioException Si el ID es nulo o la cantidad es negativa.
+     * @throws InventarioNoEncontradoException Si el producto no existe.
      */
     public InventarioDTO actualizarCantidadInventario(Long productoId, Integer nuevaCantidad) {
         if (productoId == null) throw new ValidacionNegocioException("El id del producto es obligatorio");
@@ -71,7 +95,13 @@ public class InventarioBusinessService {
     }
 
     /**
-     * Registra un movimiento de inventario (entrada/salida).
+     * Registra un movimiento de inventario (entradas o salidas).
+     * Se espera que el DTO contenga la referencia al producto y la cantidad a ajustar.
+     *
+     * @param movimiento Objeto {@link InventarioDTO} con los datos del movimiento.
+     * @return El estado del inventario tras aplicar el movimiento.
+     * @throws ValidacionNegocioException Si el movimiento no contiene el ID del producto.
+     * @throws InventarioNoEncontradoException Si el producto no existe.
      */
     public InventarioDTO registrarMovimientoInventario(InventarioDTO movimiento) {
         if (movimiento == null
