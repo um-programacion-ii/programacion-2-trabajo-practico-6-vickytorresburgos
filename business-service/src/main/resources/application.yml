@@ -1,0 +1,43 @@
+spring:
+  profiles:
+    active: dev
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+server:
+  port: 8080
+data:
+  service:
+    url: http://localhost:8081
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000ms
+        readTimeout: 10000ms
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+data:
+  service:
+    url: http://localhost:8081
+server:
+  port: 8080
+
+---
+spring:
+  config:
+    activate:
+      on-profile: postgres
+data:
+  service:
+    url: http://localhost:8081
+server:
+  port: 8080
