@@ -14,17 +14,29 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
+/**
+ * Servicio de negocio para la gestión de Categorías.
+ * Encapsula la lógica de validación, orquestación y cálculo de estadísticas
+ * relacionadas con las categorías de productos. Actúa como intermediario con el microservicio de datos.
+ */
 @Service
 @Slf4j
 public class CategoriaBusinessService {
     private final DataServiceClient dataServiceClient;
 
+    /**
+     * Inyección de dependencias del cliente Feign.
+     * @param dataServiceClient Cliente para comunicar con data-service.
+     */
     public CategoriaBusinessService(DataServiceClient dataServiceClient) {
         this.dataServiceClient = dataServiceClient;
     }
 
     /**
-     * Obtiene todas las categorías.
+     * Recupera el listado completo de categorías disponibles.
+     *
+     * @return Lista de {@link CategoriaDTO}.
+     * @throws MicroserviceCommunicationException Si hay error de conexión con data-service.
      */
     public List<CategoriaDTO> obtenerTodasLasCategorias() {
         try {
@@ -36,7 +48,13 @@ public class CategoriaBusinessService {
     }
 
     /**
-     * Obtiene una categoría por id.
+     * Busca una categoría específica por su ID.
+     *
+     * @param id Identificador de la categoría.
+     * @return El objeto {@link CategoriaDTO} encontrado.
+     * @throws ValidacionNegocioException Si el ID es nulo.
+     * @throws CategoriaNoEncontradaException Si el servicio de datos retorna 404.
+     * @throws MicroserviceCommunicationException Para otros errores de comunicación.
      */
     public CategoriaDTO obtenerCategoriaPorId(Long id) {
         if (id == null) throw new ValidacionNegocioException("El id de la categoría es obligatorio");
@@ -51,7 +69,12 @@ public class CategoriaBusinessService {
     }
 
     /**
-     * Crea una nueva categoría.
+     * Crea una nueva categoría en el sistema.
+     *
+     * @param request Datos de la nueva categoría.
+     * @return La categoría creada con su ID generado.
+     * @throws ValidacionNegocioException Si el nombre es nulo/vacío o si ya existe una categoría con ese nombre.
+     * @throws MicroserviceCommunicationException Si falla la persistencia remota.
      */
     public CategoriaDTO crearCategoria(CategoriaDTO request) {
         if (request == null || Objects.requireNonNullElse(request.getNombre(), "").trim().isEmpty()) {
@@ -68,7 +91,14 @@ public class CategoriaBusinessService {
     }
 
     /**
-     * Actualiza una categoría existente.
+     * Actualiza los datos de una categoría existente.
+     *
+     * @param id Identificador de la categoría a modificar.
+     * @param request Nuevos datos para la categoría.
+     * @return La categoría actualizada.
+     * @throws ValidacionNegocioException Si el ID es nulo o hay conflicto de nombres.
+     * @throws CategoriaNoEncontradaException Si la categoría no existe.
+     * @throws MicroserviceCommunicationException Error técnico.
      */
     public CategoriaDTO actualizarCategoria(Long id, CategoriaDTO request) {
         if (id == null) throw new ValidacionNegocioException("El id de la categoría es obligatorio para actualizar");
@@ -85,7 +115,11 @@ public class CategoriaBusinessService {
     }
 
     /**
-     * Elimina una categoría por id.
+     * Elimina una categoría del sistema.
+     *
+     * @param id Identificador de la categoría.
+     * @throws ValidacionNegocioException Si el ID es nulo.
+     * @throws CategoriaNoEncontradaException Si la categoría no existe.
      */
     public void eliminarCategoria(Long id) {
         if (id == null) throw new ValidacionNegocioException("El id de la categoría es obligatorio para eliminar");
@@ -100,7 +134,12 @@ public class CategoriaBusinessService {
     }
 
     /**
-     * Obtiene los productos asociados a una categoría (por nombre).
+     * Obtiene todos los productos asociados a una categoría buscada por nombre.
+     *
+     * @param nombreCategoria Nombre exacto de la categoría.
+     * @return Lista de {@link ProductoDTO}.
+     * @throws ValidacionNegocioException Si el nombre es nulo o vacío.
+     * @throws CategoriaNoEncontradaException Si la categoría no existe o no tiene productos.
      */
     public List<ProductoDTO> obtenerProductosDeCategoria(String nombreCategoria) {
         if (nombreCategoria == null || nombreCategoria.trim().isEmpty()) {
@@ -116,6 +155,17 @@ public class CategoriaBusinessService {
         }
     }
 
+    /**
+     * Calcula métricas y estadísticas de negocio para una categoría específica.
+     * Las métricas incluyen: total de productos, stock total, valor monetario del inventario,
+     * precios promedio/min/max y alertas de stock bajo.
+     *
+     * @param nombre Nombre de la categoría.
+     * @return Mapa con las claves: totalProductos, totalStock, valorTotalInventario,
+     * precioPromedio, precioMinimo, precioMaximo, productosConStockBajo, porcentajeProductosConStockBajo.
+     * @throws ValidacionNegocioException Si el nombre es inválido.
+     * @throws CategoriaNoEncontradaException Si la categoría no existe.
+     */
     public Map<String, Object> calcularEstadisticasCategoria(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
             throw new ValidacionNegocioException("El nombre de la categoría es obligatorio");

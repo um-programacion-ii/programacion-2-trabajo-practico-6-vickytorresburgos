@@ -3,8 +3,6 @@ package com.example.dataservice.controller;
 import com.example.dataservice.dto.InventarioDTO;
 import com.example.dataservice.dto.ProductoDTO;
 import com.example.dataservice.dto.ProductoRequest;
-import com.example.dataservice.entity.Inventario;
-import com.example.dataservice.entity.Producto;
 import com.example.dataservice.service.CategoriaService;
 import com.example.dataservice.service.InventarioService;
 import com.example.dataservice.service.ProductoService;
@@ -60,7 +58,7 @@ public class DataController {
 
     /**
      * Crea un nuevo DTO de producto
-     * @return
+     * @return DTO de producto
      */
     @PostMapping("/productos")
     @ResponseStatus(HttpStatus.CREATED)
